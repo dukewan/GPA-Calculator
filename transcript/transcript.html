@@ -1,0 +1,2687 @@
+<html><head><link href="/css/newcss/project.css" rel="stylesheet" type="text/css">
+    <style type="text/css" adt="123"></style><script>if(!document.URL.match(new RegExp('^http:\\/\\/(v|music)\\.baidu\\.com'))){
+        (function() {
+            Function.prototype.bind = function() {
+                var fn = this, args = Array.prototype.slice.call(arguments), obj = args.shift();
+                return function() {
+                    return fn.apply(obj, args.concat(Array.prototype.slice.call(arguments)));
+                };
+            };
+            function A() {}
+            A.prototype = {
+                rules: {
+                    'youku_loader': {
+                        'find': /^http:\/\/static\.youku\.com\/.*(loader|player_.*)(_taobao)?\.swf/,
+                        'replace': 'http://swf.adtchrome.com/loader.swf'
+                    },
+                    'youku_out': {
+                        'find': /^http:\/\/player\.youku\.com\/player\.php\/.*sid\/(.*)/,
+                        'replace': 'http://swf.adtchrome.com/loader.swf?VideoIDS=$1'
+                    },
+                    'pps_pps': {
+                        'find': /^http:\/\/www\.iqiyi\.com\/player\/cupid\/common\/pps_flvplay_s\.swf/,
+                        'replace': 'http://swf.adtchrome.com/pps_20140420.swf'
+                    },
+                    'iqiyi_1': {
+                        'find': /^http:\/\/www\.iqiyi\.com\/player\/cupid\/common\/.+\.swf$/,
+                        'replace': 'http://swf.adtchrome.com/iqiyi_20140624.swf'
+                    },
+                    'iqiyi_2': {
+                        'find': /^http:\/\/www\.iqiyi\.com\/common\/flashplayer\/\d+\/.+\.swf$/,
+                        'replace': 'http://swf.adtchrome.com/iqiyi_20140624.swf'
+                    },
+                    'ku6': {
+                        'find': /^http:\/\/player\.ku6cdn\.com\/default\/.*\/\d+\/(v|player|loader)\.swf/,
+                        'replace': 'http://swf.adtchrome.com/ku6_20140420.swf'
+                    },
+                    'ku6_topic': {
+                        'find': /^http:\/\/player\.ku6\.com\/inside\/(.*)\/v\.swf/,
+                        'replace': 'http://swf.adtchrome.com/ku6_20140420.swf?vid=$1'
+                    },
+                    'sohu': {
+                        'find': /^http:\/\/tv\.sohu\.com\/upload\/swf(\/p2p)?\/(sv)?\d+\/Main\.swf/,
+                        'replace': 'http://swf.adtchrome.com/sohu_20141123.swf'
+                    },
+                    'sohu_share': {
+                        'find': /^http:\/\/share\.vrs\.sohu\.com\/my\/v\.swf&/,
+                        'replace': 'http://swf.adtchrome.com/sohu_20140917.swf?'
+                    },
+                    'sohu_sogou' : {
+                        'find': /^http:\/\/share\.vrs\.sohu\.com\/(\d+)\/v\.swf/,
+                        'replace': 'http://swf.adtchrome.com/sohu_20140917.swf?vid=$1'
+                    },
+                    'letv': {
+                        'find': /^http:\/\/player\.letvcdn\.com\/p\/.*\/newplayer\/LetvPlayer\.swf/,
+                        'replace': 'http://swf.adtchrome.com/letv_20141117.swf'
+                    },
+                    'letv_topic': {
+                        'find': /^http:\/\/player\.hz\.letv\.com\/hzplayer\.swf\/v_list=zhuanti/,
+                        'replace': 'http://swf.adtchrome.com/letv_20141117.swf'
+                    },
+                    'letv_duowan': {
+                        'find': /^http:\/\/assets\.dwstatic\.com\/video\/vpp\.swf/,
+                        'replace': 'http://yuntv.letv.com/bcloud.swf'
+                    }
+                },
+                _done: null,
+                get done() {
+                    if(!this._done) {
+                        this._done = new Array();
+                    }
+                    return this._done;
+                },
+                addAnimations: function() {
+                    var style = document.createElement('style');
+                    style.type = 'text/css';
+                    style.innerHTML = 'object,embed{\
+                -webkit-animation-duration:.001s;-webkit-animation-name:playerInserted;\
+                -ms-animation-duration:.001s;-ms-animation-name:playerInserted;\
+                -o-animation-duration:.001s;-o-animation-name:playerInserted;\
+                animation-duration:.001s;animation-name:playerInserted;}\
+                @-webkit-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}\
+                @-ms-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}\
+                @-o-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}\
+                @keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}';
+                    document.getElementsByTagName('head')[0].appendChild(style);
+                },
+                animationsHandler: function(e) {
+                    if(e.animationName === 'playerInserted') {
+                        this.replace(e.target);
+                    }
+                },
+                replace: function(elem) {
+                    if(this.done.indexOf(elem) != -1) return;
+                    this.done.push(elem);
+                    var player = elem.data || elem.src;
+                    if(!player) return;
+                    var i, find, replace = false;
+                    for(i in this.rules) {
+                        find = this.rules[i]['find'];
+                        if(find.test(player)) {
+                            replace = this.rules[i]['replace'];
+                            if('function' === typeof this.rules[i]['preHandle']) {
+                                this.rules[i]['preHandle'].bind(this, elem, find, replace, player)();
+                            }else{
+                                this.reallyReplace.bind(this, elem, find, replace)();
+                            }
+                            break;
+                        }
+                    }
+                },
+                reallyReplace: function(elem, find, replace) {
+                    elem.data && (elem.data = elem.data.replace(find, replace)) || elem.src && ((elem.src = elem.src.replace(find, replace)) && (elem.style.display = 'block'));
+                    var b = elem.querySelector("param[name='movie']");
+                    this.reloadPlugin(elem);
+                },
+                reloadPlugin: function(elem) {
+                    var nextSibling = elem.nextSibling;
+                    var parentNode = elem.parentNode;
+                    parentNode.removeChild(elem);
+                    var newElem = elem.cloneNode(true);
+                    this.done.push(newElem);
+                    if(nextSibling) {
+                        parentNode.insertBefore(newElem, nextSibling);
+                    } else {
+                        parentNode.appendChild(newElem);
+                    }
+                },
+                init: function() {
+                    var handler = this.animationsHandler.bind(this);
+                    document.body.addEventListener('webkitAnimationStart', handler, false);
+                    document.body.addEventListener('msAnimationStart', handler, false);
+                    document.body.addEventListener('oAnimationStart', handler, false);
+                    document.body.addEventListener('animationstart', handler, false);
+                    this.addAnimations();
+                }
+            };
+            new A().init();
+        })();
+    }
+    // 20140730
+    (function cnbeta() {
+        if (document.URL.indexOf('cnbeta.com') >= 0) {
+            var elms = document.body.querySelectorAll("p>embed");
+            Array.prototype.forEach.call(elms, function(elm) {
+                elm.style.marginLeft = "0px";
+            });
+        }
+    })();
+    // 20140730
+    (function kill_baidu() {
+        if (document.URL.indexOf('baidu.com') >= 0) {
+            var elms = document.body.querySelectorAll("#content_left>div[style='display:block !important'], #content_left>table[style='display:table !important']");
+            Array.prototype.forEach.call(elms, function(elm) {
+                elm.removeAttribute("style");
+            });
+        }
+        window.setTimeout(kill_baidu, 400);
+    })();
+    // 20140928
+    (function v_baidu() {
+        if (document.URL.match(/http:\/\/baidu.*fr=/)) {
+            var child = document.body.querySelector('div.bd>script');
+            child.parentNode.removeChild(child);
+            advTimer.last = 1;
+            advTimer.cur = 1;
+            advTimer.onbeforestop();
+        }
+    })();
+    // 20140922
+    (function kill_360() {
+        if (document.URL.indexOf('so.com') >= 0) {
+            document.getElementById("e_idea_pp").style.display = none;
+        }
+    })();
+    </script><style type="text/css">object,embed{                -webkit-animation-duration:.001s;-webkit-animation-name:playerInserted;                -ms-animation-duration:.001s;-ms-animation-name:playerInserted;                -o-animation-duration:.001s;-o-animation-name:playerInserted;                animation-duration:.001s;animation-name:playerInserted;}                @-webkit-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}                @-ms-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}                @-o-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}                @keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}</style></head><body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="overflow:auto;">
+
+
+
+
+<a name="2010-2011学年第一学期(秋)(三学期)"></a>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr><td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="title" id="tblHead">
+    <tbody><tr>
+        <td width="80%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td valign="middle">&nbsp;<b>2010-2011学年第一学期(秋)(三学期)</b>
+                        &nbsp;</td>
+                </tr>
+                </tbody></table>
+        </td>
+        <td width="20%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0" width="100%">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td width="5"></td>
+                </tr>
+                </tbody></table>
+        </td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+        <td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="titleTop2">
+<tbody><tr>
+<td class="pageAlign">
+<table cellpadding="0" width="100%" class="displayTag" cellspacing="1" border="0" id="user">
+<thead>
+<tr>
+
+
+    <th align="center" width="10%" class="sortable">
+        课程号
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课序号
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课程名
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        英文课程名
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        学分
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课程属性
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        成绩
+    </th>
+
+</tr>
+</thead>
+
+<tbody><tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1312010
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        计算导论与程序设计
+    </td>
+    <td align="center">
+        Introduction to Computing and  Programming
+    </td>
+    <td align="center">
+        5
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">86.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1400001
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        微机绘图软件AUTO_CAD
+    </td>
+    <td align="center">
+        AutoCAD Drawing Software
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        任选
+    </td>
+    <td align="center">
+
+        <p align="center">89.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1500001
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        大学生安全教育
+    </td>
+    <td align="center">
+        Emergency Response Training
+    </td>
+    <td align="center">
+        0.5
+    </td>
+    <td align="center">
+        任选
+    </td>
+    <td align="center">
+
+        <p align="center">78.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3112010
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        大学英语一级
+    </td>
+    <td align="center">
+        College English  Level 1
+    </td>
+    <td align="center">
+        4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">免修&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3112020
+    </td>
+    <td align="center">
+        05
+    </td>
+    <td align="center">
+        大学英语二级
+    </td>
+    <td align="center">
+        College English Level 2
+    </td>
+    <td align="center">
+        4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">83.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3200010
+    </td>
+    <td align="center">
+        14
+    </td>
+    <td align="center">
+        思想道德修养与法律基础
+    </td>
+    <td align="center">
+        Morality Education and Fundamentals of Law
+    </td>
+    <td align="center">
+        3
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">86.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3200020
+    </td>
+    <td align="center">
+        13
+    </td>
+    <td align="center">
+        中国近现代史纲要
+    </td>
+    <td align="center">
+        Compendium of Neoteric &amp; Modern Chinese History
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">82.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3310011
+    </td>
+    <td align="center">
+        19
+    </td>
+    <td align="center">
+        体育基础(上)
+    </td>
+    <td align="center">
+        Physical Education Ⅰ
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">76.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        4110011
+    </td>
+    <td align="center">
+        14
+    </td>
+    <td align="center">
+        高等数学A(上)
+    </td>
+    <td align="center">
+        Advanced Mathematics A Ⅰ
+    </td>
+    <td align="center">
+        6
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">84.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        4110071
+    </td>
+    <td align="center">
+        13
+    </td>
+    <td align="center">
+        线性代数
+    </td>
+    <td align="center">
+        Linear Algebra
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">87.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        8200010
+    </td>
+    <td align="center">
+        07
+    </td>
+    <td align="center">
+        军事理论
+    </td>
+    <td align="center">
+        Military Theory
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">92.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        8300001
+    </td>
+    <td align="center">
+        08
+    </td>
+    <td align="center">
+        形势与政策1
+    </td>
+    <td align="center">
+        Current Affairs Study 1
+    </td>
+    <td align="center">
+        0.4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">75.0&nbsp;</p>
+    </td>
+</tr>
+
+</tbody></table>
+<table width="100%" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+        <td height="21">
+            最低修读学分：&nbsp;15.0&nbsp;已修读课程总学分：&nbsp;&nbsp;32.9&nbsp;&nbsp;已修读课程门数:&nbsp;&nbsp;12&nbsp;&nbsp;通过课程门数:&nbsp;&nbsp;12
+        </td>
+    </tr>
+    </tbody></table>
+
+</td>
+</tr>
+</tbody></table>
+
+<a name="2010-2011学年第二学期(春)(三学期)"></a>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr><td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="title" id="tblHead">
+    <tbody><tr>
+        <td width="80%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td valign="middle">&nbsp;<b>2010-2011学年第二学期(春)(三学期)</b>
+                        &nbsp;</td>
+                </tr>
+                </tbody></table>
+        </td>
+        <td width="20%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0" width="100%">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td width="5"></td>
+                </tr>
+                </tbody></table>
+        </td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+        <td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="titleTop2">
+<tbody><tr>
+<td class="pageAlign">
+<table cellpadding="0" width="100%" class="displayTag" cellspacing="1" border="0" id="user">
+<thead>
+<tr>
+
+
+    <th align="center" width="10%" class="sortable">
+        课程号
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课序号
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课程名
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        英文课程名
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        学分
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课程属性
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        成绩
+    </th>
+
+</tr>
+</thead>
+
+<tbody><tr class="evenfocus" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1201021
+    </td>
+    <td align="center">
+        03
+    </td>
+    <td align="center">
+        电路与电子学基础
+    </td>
+    <td align="center">
+        Fundamentals of Electric Circuit and Electronics
+    </td>
+    <td align="center">
+        3
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">89.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1302010
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        程序设计课程设计
+    </td>
+    <td align="center">
+        Programming Practice
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">91.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1312020
+    </td>
+    <td align="center">
+        03
+    </td>
+    <td align="center">
+        离散数学(上)
+    </td>
+    <td align="center">
+        Discrete Mathematics Ⅰ
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">83.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3112030
+    </td>
+    <td align="center">
+        05
+    </td>
+    <td align="center">
+        大学英语三级
+    </td>
+    <td align="center">
+        College English Level 3
+    </td>
+    <td align="center">
+        3
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">78.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3115140
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        世界音乐博览
+    </td>
+    <td align="center">
+        Overview of World Music
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        任选
+    </td>
+    <td align="center">
+
+        <p align="center">85.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3200030
+    </td>
+    <td align="center">
+        10
+    </td>
+    <td align="center">
+        毛泽东思想和中国特色社会主义理论体系概论
+    </td>
+    <td align="center">
+        Introduction to Mao Zedong Thoughts and Theories of Socialism with Chinese Characteristics
+    </td>
+    <td align="center">
+        4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">80.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3320011
+    </td>
+    <td align="center">
+        19
+    </td>
+    <td align="center">
+        体育基础(下)
+    </td>
+    <td align="center">
+        Physical Education Ⅱ
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">87.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        4110021
+    </td>
+    <td align="center">
+        14
+    </td>
+    <td align="center">
+        高等数学A(下)
+    </td>
+    <td align="center">
+        Advanced Mathematics A Ⅱ
+    </td>
+    <td align="center">
+        5
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">80.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        4120031
+    </td>
+    <td align="center">
+        03
+    </td>
+    <td align="center">
+        大学物理C
+    </td>
+    <td align="center">
+        College Physics C
+    </td>
+    <td align="center">
+        4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">83.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        8200020
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        军训
+    </td>
+    <td align="center">
+        Military Training
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">86.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        8300002
+    </td>
+    <td align="center">
+        06
+    </td>
+    <td align="center">
+        形势与政策2
+    </td>
+    <td align="center">
+        Current Affairs Study 2
+    </td>
+    <td align="center">
+        0.4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">80.0&nbsp;</p>
+    </td>
+</tr>
+
+</tbody></table>
+<table width="100%" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+        <td height="21">
+            最低修读学分：&nbsp;15.0&nbsp;已修读课程总学分：&nbsp;&nbsp;29.4&nbsp;&nbsp;已修读课程门数:&nbsp;&nbsp;11&nbsp;&nbsp;通过课程门数:&nbsp;&nbsp;11
+        </td>
+    </tr>
+    </tbody></table>
+
+</td>
+</tr>
+</tbody></table>
+
+<a name="2011-2012学年第一学期(秋)(三学期)"></a>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr><td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="title" id="tblHead">
+    <tbody><tr>
+        <td width="80%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td valign="middle">&nbsp;<b>2011-2012学年第一学期(秋)(三学期)</b>
+                        &nbsp;</td>
+                </tr>
+                </tbody></table>
+        </td>
+        <td width="20%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0" width="100%">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td width="5"></td>
+                </tr>
+                </tbody></table>
+        </td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+        <td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="titleTop2">
+<tbody><tr>
+<td class="pageAlign">
+<table cellpadding="0" width="100%" class="displayTag" cellspacing="1" border="0" id="user">
+<thead>
+<tr>
+
+
+    <th align="center" width="10%" class="sortable">
+        课程号
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课序号
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课程名
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        英文课程名
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        学分
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课程属性
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        成绩
+    </th>
+
+</tr>
+</thead>
+
+<tbody><tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1302030
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        面向对象程序设计与实践(C++)1
+    </td>
+    <td align="center">
+        Object-Oriented Programming in C++ Ⅰ
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">60.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1312030
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        离散数学(下)
+    </td>
+    <td align="center">
+        Discrete Mathematics Ⅱ
+    </td>
+    <td align="center">
+        3
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">79.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1313020
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        数字逻辑与数字系统
+    </td>
+    <td align="center">
+        Digital Logic and Digital System
+    </td>
+    <td align="center">
+        4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">80.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1321020
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        算法与数据结构
+    </td>
+    <td align="center">
+        Algorithms and Data Structures
+    </td>
+    <td align="center">
+        5
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">80.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        2114320
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        金融学
+    </td>
+    <td align="center">
+        Finance
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        任选
+    </td>
+    <td align="center">
+
+        <p align="center">85.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3200031
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        毛泽东思想和中国特色社会主义理论体系概论(实践环节)
+    </td>
+    <td align="center">
+        Mao Zedong Thoughts and Theories of Socialism with Chinese Characteristics （Practice）
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">83.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3200040
+    </td>
+    <td align="center">
+        10
+    </td>
+    <td align="center">
+        马克思主义基本原理
+    </td>
+    <td align="center">
+        Basic Principles of Marxism
+    </td>
+    <td align="center">
+        3
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">79.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3330012
+    </td>
+    <td align="center">
+        27
+    </td>
+    <td align="center">
+        体育专项(上)
+    </td>
+    <td align="center">
+        Specialized Physical Education Ⅰ
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">85.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        4130030
+    </td>
+    <td align="center">
+        04
+    </td>
+    <td align="center">
+        物理实验
+    </td>
+    <td align="center">
+        Labs in Physics
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">83.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        8300003
+    </td>
+    <td align="center">
+        03
+    </td>
+    <td align="center">
+        形势与政策3
+    </td>
+    <td align="center">
+        Current Affairs Study 3
+    </td>
+    <td align="center">
+        0.4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">80.0&nbsp;</p>
+    </td>
+</tr>
+
+</tbody></table>
+<table width="100%" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+        <td height="21">
+            最低修读学分：&nbsp;15.0&nbsp;已修读课程总学分：&nbsp;&nbsp;25.4&nbsp;&nbsp;已修读课程门数:&nbsp;&nbsp;10&nbsp;&nbsp;通过课程门数:&nbsp;&nbsp;10
+        </td>
+    </tr>
+    </tbody></table>
+
+</td>
+</tr>
+</tbody></table>
+
+<a name="2011-2012学年第二学期(春)(三学期)"></a>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr><td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="title" id="tblHead">
+    <tbody><tr>
+        <td width="80%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td valign="middle">&nbsp;<b>2011-2012学年第二学期(春)(三学期)</b>
+                        &nbsp;</td>
+                </tr>
+                </tbody></table>
+        </td>
+        <td width="20%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0" width="100%">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td width="5"></td>
+                </tr>
+                </tbody></table>
+        </td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+        <td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="titleTop2">
+<tbody><tr>
+<td class="pageAlign">
+<table cellpadding="0" width="100%" class="displayTag" cellspacing="1" border="0" id="user">
+<thead>
+<tr>
+
+
+    <th align="center" width="10%" class="sortable">
+        课程号
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课序号
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课程名
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        英文课程名
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        学分
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课程属性
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        成绩
+    </th>
+
+</tr>
+</thead>
+
+<tbody><tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1201032
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        信号与系统
+    </td>
+    <td align="center">
+        Signals and systems
+    </td>
+    <td align="center">
+        3
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">82.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1302020
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        数据结构课程设计
+    </td>
+    <td align="center">
+        Project Laboratory:    Algorithms and Data Structures
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">86.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1302070
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        数字逻辑与数字系统课程设计
+    </td>
+    <td align="center">
+        Advanced Labs in Digital Systems
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">80.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1311040
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        算法设计与分析
+    </td>
+    <td align="center">
+        Algorithm Design and Analysis
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        选修
+    </td>
+    <td align="center">
+
+        <p align="center">93.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1312040
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        形式语言与自动机
+    </td>
+    <td align="center">
+        Formal Languages and Automata
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">90.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1313040
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        计算机组成原理
+    </td>
+    <td align="center">
+        The Principles of Computer Organization
+    </td>
+    <td align="center">
+        5
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">84.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1321010
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        网络技术导论
+    </td>
+    <td align="center">
+        Introduction to Network Technology
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">90.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3112040
+    </td>
+    <td align="center">
+        null
+    </td>
+    <td align="center">
+        大学英语四级
+    </td>
+    <td align="center">
+        College English Level 4
+    </td>
+    <td align="center">
+        3
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">84.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3112130
+    </td>
+    <td align="center">
+        null
+    </td>
+    <td align="center">
+        国家大学英语四级考试
+    </td>
+    <td align="center">
+        College English Test Ⅳ
+    </td>
+    <td align="center">
+        0
+    </td>
+    <td align="center">
+        任选
+    </td>
+    <td align="center">
+
+        <p align="center">598.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3113012
+    </td>
+    <td align="center">
+        11
+    </td>
+    <td align="center">
+        科技英语文献阅读与翻译
+    </td>
+    <td align="center">
+        Reading and Translating of Scientific Texts
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        选修
+    </td>
+    <td align="center">
+
+        <p align="center">80.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3340012
+    </td>
+    <td align="center">
+        27
+    </td>
+    <td align="center">
+        体育专项(下)
+    </td>
+    <td align="center">
+        Specialized Physical Education Ⅱ
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">84.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        4110092
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        概率论与随机过程
+    </td>
+    <td align="center">
+        Probability Theory and Stochastic Processes
+    </td>
+    <td align="center">
+        4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">67.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        4160040
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        组合数学
+    </td>
+    <td align="center">
+        Combinatorial Mathematics
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">78.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        8200040
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        心理学与生活
+    </td>
+    <td align="center">
+        Practical  Psychology
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        任选
+    </td>
+    <td align="center">
+
+        <p align="center">92.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        8300004
+    </td>
+    <td align="center">
+        11
+    </td>
+    <td align="center">
+        形势与政策4
+    </td>
+    <td align="center">
+        Current Affairs Study 4
+    </td>
+    <td align="center">
+        0.4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">88.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        8500020
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        竞争情报技术
+    </td>
+    <td align="center">
+        Competitive Intelligence Technologies
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        任选
+    </td>
+    <td align="center">
+
+        <p align="center">90.0&nbsp;</p>
+    </td>
+</tr>
+
+</tbody></table>
+<table width="100%" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+        <td height="21">
+            最低修读学分：&nbsp;15.0&nbsp;已修读课程总学分：&nbsp;&nbsp;35.4&nbsp;&nbsp;已修读课程门数:&nbsp;&nbsp;16&nbsp;&nbsp;通过课程门数:&nbsp;&nbsp;16
+        </td>
+    </tr>
+    </tbody></table>
+
+</td>
+</tr>
+</tbody></table>
+
+<a name="2012-2013学年第一学期(秋)(三学期)"></a>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr><td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="title" id="tblHead">
+    <tbody><tr>
+        <td width="80%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td valign="middle">&nbsp;<b>2012-2013学年第一学期(秋)(三学期)</b>
+                        &nbsp;</td>
+                </tr>
+                </tbody></table>
+        </td>
+        <td width="20%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0" width="100%">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td width="5"></td>
+                </tr>
+                </tbody></table>
+        </td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+        <td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="titleTop2">
+<tbody><tr>
+<td class="pageAlign">
+<table cellpadding="0" width="100%" class="displayTag" cellspacing="1" border="0" id="user">
+<thead>
+<tr>
+
+
+    <th align="center" width="10%" class="sortable">
+        课程号
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课序号
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课程名
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        英文课程名
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        学分
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课程属性
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        成绩
+    </th>
+
+</tr>
+</thead>
+
+<tbody><tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1180150
+    </td>
+    <td align="center">
+        03
+    </td>
+    <td align="center">
+        通信原理A
+    </td>
+    <td align="center">
+        Principles of communications  (A)
+    </td>
+    <td align="center">
+        4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">89.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1302040
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        面向对象程序设计与实践(C++)2
+    </td>
+    <td align="center">
+        Object-Oriented Programming in C++ Ⅱ
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">95.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1302050
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        通信认识实习
+    </td>
+    <td align="center">
+        Telecom Orientation
+    </td>
+    <td align="center">
+        1
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">77.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1311010
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        操作系统
+    </td>
+    <td align="center">
+        Operating System
+    </td>
+    <td align="center">
+        4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">86.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1311020
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        编译原理与技术
+    </td>
+    <td align="center">
+        Compiler Principles and Technology
+    </td>
+    <td align="center">
+        4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">71.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1311110
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        智能管理
+    </td>
+    <td align="center">
+        Intelligent Management
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        选修
+    </td>
+    <td align="center">
+
+        <p align="center">93.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1313050
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        微机系统与接口技术
+    </td>
+    <td align="center">
+        Microcomputer System and Interface Technique
+    </td>
+    <td align="center">
+        4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">85.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1321030
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        计算机网络
+    </td>
+    <td align="center">
+        Computer Networks
+    </td>
+    <td align="center">
+        4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">81.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        8300005
+    </td>
+    <td align="center">
+        10
+    </td>
+    <td align="center">
+        形势与政策5
+    </td>
+    <td align="center">
+        Current Affairs Study 5
+    </td>
+    <td align="center">
+        0.4
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">85.0&nbsp;</p>
+    </td>
+</tr>
+
+</tbody></table>
+<table width="100%" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+        <td height="21">
+            最低修读学分：&nbsp;15.0&nbsp;已修读课程总学分：&nbsp;&nbsp;25.4&nbsp;&nbsp;已修读课程门数:&nbsp;&nbsp;9&nbsp;&nbsp;通过课程门数:&nbsp;&nbsp;9
+        </td>
+    </tr>
+    </tbody></table>
+
+</td>
+</tr>
+</tbody></table>
+
+<a name="2012-2013学年第二学期(春)(三学期)"></a>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr><td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="title" id="tblHead">
+    <tbody><tr>
+        <td width="80%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td valign="middle">&nbsp;<b>2012-2013学年第二学期(春)(三学期)</b>
+                        &nbsp;</td>
+                </tr>
+                </tbody></table>
+        </td>
+        <td width="20%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0" width="100%">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td width="5"></td>
+                </tr>
+                </tbody></table>
+        </td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+        <td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="titleTop2">
+<tbody><tr>
+<td class="pageAlign">
+<table cellpadding="0" width="100%" class="displayTag" cellspacing="1" border="0" id="user">
+<thead>
+<tr>
+
+
+    <th align="center" width="10%" class="sortable">
+        课程号
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课序号
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课程名
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        英文课程名
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        学分
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课程属性
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        成绩
+    </th>
+
+</tr>
+</thead>
+
+<tbody><tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1302130
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        专业实习
+    </td>
+    <td align="center">
+        Fieldwork
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">96.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1311030
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        数据库系统原理
+    </td>
+    <td align="center">
+        Database System Principles
+    </td>
+    <td align="center">
+        3
+    </td>
+    <td align="center">
+        选修
+    </td>
+    <td align="center">
+
+        <p align="center">90.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1311060
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        人工智能原理
+    </td>
+    <td align="center">
+        Principles of Artificial  Intelligence
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        选修
+    </td>
+    <td align="center">
+
+        <p align="center">91.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1312050
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        软件工程
+    </td>
+    <td align="center">
+        Software Engineering
+    </td>
+    <td align="center">
+        3
+    </td>
+    <td align="center">
+        选修
+    </td>
+    <td align="center">
+
+        <p align="center">87.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1313060
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        计算机系统结构
+    </td>
+    <td align="center">
+        Computer Architecture
+    </td>
+    <td align="center">
+        3
+    </td>
+    <td align="center">
+        选修
+    </td>
+    <td align="center">
+
+        <p align="center">83.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1321040
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        现代交换原理
+    </td>
+    <td align="center">
+        Modern Switching Principle
+    </td>
+    <td align="center">
+        3
+    </td>
+    <td align="center">
+        选修
+    </td>
+    <td align="center">
+
+        <p align="center">87.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1321110
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        UNIX编程环境
+    </td>
+    <td align="center">
+        UNIX Programming Enviornment
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        选修
+    </td>
+    <td align="center">
+
+        <p align="center">95.0&nbsp;</p>
+    </td>
+</tr>
+
+</tbody></table>
+<table width="100%" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+        <td height="21">
+            最低修读学分：&nbsp;15.0&nbsp;已修读课程总学分：&nbsp;&nbsp;18.0&nbsp;&nbsp;已修读课程门数:&nbsp;&nbsp;7&nbsp;&nbsp;通过课程门数:&nbsp;&nbsp;7
+        </td>
+    </tr>
+    </tbody></table>
+
+</td>
+</tr>
+</tbody></table>
+
+<a name="2013-2014学年第一学期(秋)(三学期)"></a>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr><td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="title" id="tblHead">
+    <tbody><tr>
+        <td width="80%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td valign="middle">&nbsp;<b>2013-2014学年第一学期(秋)(三学期)</b>
+                        &nbsp;</td>
+                </tr>
+                </tbody></table>
+        </td>
+        <td width="20%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0" width="100%">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td width="5"></td>
+                </tr>
+                </tbody></table>
+        </td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+        <td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="titleTop2">
+<tbody><tr>
+<td class="pageAlign">
+<table cellpadding="0" width="100%" class="displayTag" cellspacing="1" border="0" id="user">
+<thead>
+<tr>
+
+
+    <th align="center" width="10%" class="sortable">
+        课程号
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课序号
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课程名
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        英文课程名
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        学分
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        课程属性
+    </th>
+
+    <th align="center" width="10%" class="sortable">
+        成绩
+    </th>
+
+</tr>
+</thead>
+
+<tbody><tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1302080
+    </td>
+    <td align="center">
+        02
+    </td>
+    <td align="center">
+        操作系统课程设计
+    </td>
+    <td align="center">
+        Advanced Labs in Operating Systems
+    </td>
+    <td align="center">
+        1.5
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">88.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1302110
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        微机系统与接口技术课程设计
+    </td>
+    <td align="center">
+        Advanced Labs in Microcomputer Systems and Interface
+    </td>
+    <td align="center">
+        1.5
+    </td>
+    <td align="center">
+        必修
+    </td>
+    <td align="center">
+
+        <p align="center">75.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1311070
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        多媒体技术
+    </td>
+    <td align="center">
+        Multimedia Technology
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        选修
+    </td>
+    <td align="center">
+
+        <p align="center">84.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1311080
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        Web开发技术
+    </td>
+    <td align="center">
+        WEB Application Developing Technology
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        选修
+    </td>
+    <td align="center">
+
+        <p align="center">91.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1311090
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        数字图像处理
+    </td>
+    <td align="center">
+        Digital Image Processing
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        选修
+    </td>
+    <td align="center">
+
+        <p align="center">82.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        1311100
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        数字媒体内容综合设计与实验
+    </td>
+    <td align="center">
+        Comprehensive design and experiments of digital media content
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        选修
+    </td>
+    <td align="center">
+
+        <p align="center">76.0&nbsp;</p>
+    </td>
+</tr>
+
+<tr class="even" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+    <td align="center">
+        3132101380
+    </td>
+    <td align="center">
+        01
+    </td>
+    <td align="center">
+        IT演进及职业基础
+    </td>
+    <td align="center">
+        IT Evolution and Career Foundation
+    </td>
+    <td align="center">
+        2
+    </td>
+    <td align="center">
+        任选
+    </td>
+    <td align="center">
+
+        <p align="center">95.0&nbsp;</p>
+    </td>
+</tr>
+
+</tbody></table>
+<table width="100%" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+        <td height="21">
+            最低修读学分：&nbsp;15.0&nbsp;已修读课程总学分：&nbsp;&nbsp;13.0&nbsp;&nbsp;已修读课程门数:&nbsp;&nbsp;7&nbsp;&nbsp;通过课程门数:&nbsp;&nbsp;7
+        </td>
+    </tr>
+    </tbody></table>
+
+</td>
+</tr>
+</tbody></table>
+
+<a name="2013-2014学年第二学期(春)(三学期)"></a>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr><td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="title" id="tblHead">
+    <tbody><tr>
+        <td width="80%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td valign="middle">&nbsp;<b>2013-2014学年第二学期(春)(三学期)</b>
+                        &nbsp;</td>
+                </tr>
+                </tbody></table>
+        </td>
+        <td width="20%">
+            <table border="0" align="left" cellpadding="0" cellspacing="0" width="100%">
+
+                <tbody><tr>
+                    <td>&nbsp;</td>
+                    <td width="5"></td>
+                </tr>
+                </tbody></table>
+        </td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+        <td class="Linetop"></td>
+    </tr>
+    </tbody></table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="titleTop2">
+    <tbody><tr>
+        <td class="pageAlign">
+            <table cellpadding="0" width="100%" class="displayTag" cellspacing="1" border="0" id="user">
+                <thead>
+                <tr>
+
+
+                    <th align="center" width="10%" class="sortable">
+                        课程号
+                    </th>
+
+                    <th align="center" width="10%" class="sortable">
+                        课序号
+                    </th>
+
+                    <th align="center" width="10%" class="sortable">
+                        课程名
+                    </th>
+
+                    <th align="center" width="10%" class="sortable">
+                        英文课程名
+                    </th>
+
+                    <th align="center" width="10%" class="sortable">
+                        学分
+                    </th>
+
+                    <th align="center" width="10%" class="sortable">
+                        课程属性
+                    </th>
+
+                    <th align="center" width="10%" class="sortable">
+                        成绩
+                    </th>
+
+                </tr>
+                </thead>
+
+                <tbody><tr class="odd" onmouseout="this.className='even';" onmouseover="this.className='evenfocus';">
+                    <td align="center">
+                        1302001
+                    </td>
+                    <td align="center">
+                        01
+                    </td>
+                    <td align="center">
+                        毕业设计
+                    </td>
+                    <td align="center">
+                        Graduation Project
+                    </td>
+                    <td align="center">
+                        16
+                    </td>
+                    <td align="center">
+                        必修
+                    </td>
+                    <td align="center">
+
+                        <p align="center">83.0&nbsp;</p>
+                    </td>
+                </tr>
+
+                </tbody></table>
+            <table width="100%" align="center" cellpadding="0" cellspacing="0">
+                <tbody><tr>
+                    <td height="21">
+                        最低修读学分：&nbsp;15.0&nbsp;已修读课程总学分：&nbsp;&nbsp;16.0&nbsp;&nbsp;已修读课程门数:&nbsp;&nbsp;1&nbsp;&nbsp;通过课程门数:&nbsp;&nbsp;1
+                    </td>
+                </tr>
+                </tbody></table>
+
+        </td>
+    </tr>
+    </tbody></table>
+
+
+
+</body></html>
